@@ -1,20 +1,23 @@
 import os
 from dotenv import load_dotenv
 
+# Cargamos el .env solo si existe (en local), en Render se usan las variables del panel
 load_dotenv()
 
-# Configuración de la base de datos - Usando tus credenciales
-DB_USER = os.getenv("DB_USER")
-DB_PASS = os.getenv("DB_PASS")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-SCHEMA = os.getenv("SCHEMA")
+# --- CONFIGURACIÓN DE LA APLICACIÓN ---
+# Render asigna automáticamente un puerto dinámico en la variable $PORT
+# Si no existe (local), usamos el 8000 por defecto
+APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
+APP_PORT = int(os.getenv("PORT", 8000)) 
 
-# URL de conexión para SQLAlchemy
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# Debug se desactiva en producción por defecto
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-# Configuración de la aplicación
-APP_HOST = os.getenv("APP_HOST")
-APP_PORT = int(os.getenv("APP_PORT"))  # Cambiado a 8002
-DEBUG = os.getenv("DEBUG").lower() == "true"
+# --- CONFIGURACIÓN DE DATOS ---
+# Definimos nombres de archivos fijos para los CSV
+VENTAS_CSV = "ventas_full.csv"
+STATS_CSV = "stats_db.csv"
+
+# Mantenemos esta variable vacía o con un nombre genérico para no romper imports en otros archivos
+SCHEMA = "data_folder"
+DATABASE_URL = "sqlite:///./dummy.db" # URL ficticia por si algún script aún la importa
