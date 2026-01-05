@@ -1,4 +1,7 @@
 import pandas as pd
+import matplotlib
+# Forzamos Matplotlib a usar un backend no interactivo para el servidor
+matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -6,58 +9,76 @@ from scipy import stats
 import base64
 from io import BytesIO
 from typing import Dict, Any, Optional
-from statsmodels.tsa.stattools import adfuller, acf, pacf
+from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import warnings
 from datetime import datetime
+
 warnings.filterwarnings('ignore')
 
-# Importar el módulo de festivos
-from .festivos import EcuadorHolidays
-#importar el forecaster
-from .forecaster import Forecaster
+# Importaciones relativas
+try:
+    from .festivos import EcuadorHolidays
+    from .forecaster import Forecaster
+except ImportError:
+    from festivos import EcuadorHolidays
+    from forecaster import Forecaster
 
 def plot_to_base64(fig):
-    """Convierte matplotlib figure a base64 para API"""
-    buf = BytesIO()
-    fig.savefig(buf, format='png', dpi=100, bbox_inches='tight')
-    buf.seek(0)
-    img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-    plt.close(fig)
-    return f"data:image/png;base64,{img_base64}"
+    """Convierte matplotlib figure a base64 para API y libera memoria"""
+    try:
+        buf = BytesIO()
+        fig.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+        plt.close(fig) # Liberar RAM para Render
+        return f"data:image/png;base64,{img_base64}"
+    except Exception as e:
+        plt.close(fig)
+        return ""
 
 class NouxTrendsAnalyzer:
     def __init__(self, df: pd.DataFrame):
         self.df = df.copy()
         self.df['fecha'] = pd.to_datetime(self.df['fecha'])
-        # Agregar clasificación de días
         self.df = self._add_day_classification(self.df)
         self.forecaster = Forecaster(df)
         self.modelos_entrenados = False
 
-
-
-    ############ Analisis de la serie de tiempo ############
-        
     def _add_day_classification(self, df):
-        """Agrega clasificación de tipos de día al DataFrame"""
         df_copy = df.copy()
         df_copy['tipo_dia'] = df_copy['fecha'].apply(EcuadorHolidays.get_day_type)
         df_copy['es_festivo'] = df_copy['fecha'].apply(EcuadorHolidays.is_holiday)
         df_copy['es_fin_semana'] = df_copy['fecha'].apply(EcuadorHolidays.is_weekend)
         return df_copy
-    
+
     def get_filter_options(self) -> Dict[str, Any]:
-        """Obtiene opciones disponibles para filtros"""
         return {
-            "local": sorted(self.df['local'].unique()),
-            "articulo": sorted(self.df['articulo'].unique()),
-            "categoria": sorted(self.df['categoria'].unique()),
-            "tamaño_local": sorted(self.df['tamaño_local'].unique()),
-            "ubicacion_local": sorted(self.df['ubicacion_local'].unique())
+            "local": sorted(self.df['local'].dropna().unique().tolist()),
+            "articulo": sorted(self.df['articulo'].dropna().unique().tolist()),
+            "categoria": sorted(self.df['categoria'].dropna().unique().tolist()),
+            "tamaño_local": sorted(self.df['tamaño_local'].dropna().unique().tolist()),
+            "ubicacion_local": sorted(self.df['ubicacion_local'].dropna().unique().tolist())
         }
+
+    def _apply_filters(self, request) -> pd.DataFrame:
+        df_filtrado = self.df.copy()
+        if hasattr(request, 'filtros') and request.filtros:
+            for key, value in request.filtros.items():
+                if value:
+                    if isinstance(value, list):
+                        df_filtrado = df_filtrado[df_filtrado[key].isin(value)]
+                    else:
+                        df_filtrado = df_filtrado[df_filtrado[key] == value]
+        if hasattr(request, 'fecha_inicio') and request.fecha_inicio:
+            df_filtrado = df_filtrado[df_filtrado['fecha'] >= pd.to_datetime(request.fecha_inicio)]
+        if hasattr(request, 'fecha_fin') and request.fecha_fin:
+            df_filtrado = df_filtrado[df_filtrado['fecha'] <= pd.to_datetime(request.fecha_fin)]
+        return df_filtrado
     
     # ✅ MÉTODO PRINCIPAL QUE FALTA
+    # Continuación de la clase NouxTrendsAnalyzer...
+
     def analyze_time_series(self, request) -> Dict[str, Any]:
         """Análisis completo de series temporales para pronósticos"""
         # Aplicar filtros
@@ -85,31 +106,12 @@ class NouxTrendsAnalyzer:
             "filtered_data_info": {
                 "rows": len(df_filtrado),
                 "date_range": {
-                    "start": df_filtrado['fecha'].min().isoformat(),
-                    "end": df_filtrado['fecha'].max().isoformat()
+                    "start": df_filtrado['fecha'].min().isoformat() if not df_filtrado.empty else None,
+                    "end": df_filtrado['fecha'].max().isoformat() if not df_filtrado.empty else None
                 }
             }
         }
-    
-    # ✅ MÉTODOS AUXILIARES QUE FALTAN
-    def _apply_filters(self, request) -> pd.DataFrame:
-        """Aplica filtros al DataFrame"""
-        df_filtrado = self.df.copy()
-        
-        if request.filtros:
-            for key, value in request.filtros.items():
-                if isinstance(value, list):
-                    df_filtrado = df_filtrado[df_filtrado[key].isin(value)]
-                else:
-                    df_filtrado = df_filtrado[df_filtrado[key] == value]
-        
-        if request.fecha_inicio:
-            df_filtrado = df_filtrado[df_filtrado['fecha'] >= request.fecha_inicio]
-        if request.fecha_fin:
-            df_filtrado = df_filtrado[df_filtrado['fecha'] <= request.fecha_fin]
-            
-        return df_filtrado
-    
+
     def _plot_serie_tiempo_completo(self, df, columna_valor, grupo_principal):
         """Serie temporal con tendencia y componentes"""
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
@@ -135,7 +137,7 @@ class NouxTrendsAnalyzer:
         axes[0,1].grid(True, alpha=0.3)
         
         # Distribución de los datos
-        axes[1,0].hist(df[columna_valor], bins=50, alpha=0.7, edgecolor='black')
+        axes[1,0].hist(df[columna_valor].dropna(), bins=50, alpha=0.7, edgecolor='black')
         axes[1,0].set_title('Distribución de Valores')
         axes[1,0].set_xlabel(columna_valor)
         axes[1,0].set_ylabel('Frecuencia')
@@ -147,33 +149,32 @@ class NouxTrendsAnalyzer:
         
         plt.tight_layout()
         return plot_to_base64(fig)
-    
+
     def _analisis_estacionariedad(self, df, columna_valor):
         """Análisis de estacionariedad para modelos de pronóstico"""
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
         
-        # Preparar datos diarios
         df_diario = df.groupby('fecha')[columna_valor].sum().reset_index()
         df_diario = df_diario.set_index('fecha').asfreq('D').fillna(0)
         serie_temporal = df_diario[columna_valor]
         
-        serie_temporal_diff = serie_temporal.diff(periods=1).dropna()
+        serie_temporal_diff = serie_temporal.diff().dropna()
+        
         # Test de Dickey-Fuller aumentado
+        adf_pvalue = 1.0
         try:
-            result = adfuller(serie_temporal_diff.dropna())
-            adf_statistic = result[0]
-            adf_pvalue = result[1]
+            if len(serie_temporal_diff) > 10:
+                result = adfuller(serie_temporal_diff)
+                adf_pvalue = result[1]
         except:
-            adf_statistic = None
-            adf_pvalue = None
+            pass
         
-        # Gráfico ACF (Autocorrelación)
-        
-        plot_acf(serie_temporal_diff, ax=axes[0,0], lags=40, alpha=0.05)
+        # Gráfico ACF
+        plot_acf(serie_temporal_diff, ax=axes[0,0], lags=min(40, len(serie_temporal_diff)//2), alpha=0.05)
         axes[0,0].set_title(f'Autocorrelación (ACF)\nADF p-value: {adf_pvalue:.4f}')
         
-        # Gráfico PACF (Autocorrelación Parcial)
-        plot_pacf(serie_temporal_diff, ax=axes[0,1], lags=40, alpha=0.05)
+        # Gráfico PACF
+        plot_pacf(serie_temporal_diff, ax=axes[0,1], lags=min(40, len(serie_temporal_diff)//2-1), alpha=0.05)
         axes[0,1].set_title('Autocorrelación Parcial (PACF)')
         
         # Media y varianza móviles
@@ -187,7 +188,6 @@ class NouxTrendsAnalyzer:
         
         axes[1,1].plot(rolling_std.index, rolling_std, color='red', linewidth=2)
         axes[1,1].set_title('Desviación Estándar Móvil (30 días)')
-        axes[1,1].set_ylabel('Desviación Estándar')
         
         plt.tight_layout()
         return plot_to_base64(fig)
@@ -563,4 +563,5 @@ class NouxTrendsAnalyzer:
         
         return insights
     
+
     
