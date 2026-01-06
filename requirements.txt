@@ -22,7 +22,7 @@ Django==4.2.26
 docutils==0.22.3
 exceptiongroup==1.3.0
 executing==2.2.1
-fastapi==0.121.2
+fastapi
 fonttools==4.60.1
 gitdb==4.0.12
 GitPython==3.1.45
@@ -37,13 +37,13 @@ ipykernel==6.31.0
 ipython==8.18.1
 jedi==0.19.2
 Jinja2==3.1.6
-joblib==1.5.2
+joblib
 jsonschema==4.25.1
 jsonschema-specifications==2025.9.1
 jupyter_client==8.6.3
 jupyter_core==5.8.1
 kiwisolver==1.4.7
-lightgbm==4.6.0
+lightgbm
 MarkupSafe==3.0.3
 matplotlib==3.9.4
 matplotlib-inline==0.2.1
@@ -52,7 +52,7 @@ nest-asyncio==1.6.0
 numpy==2.0.2
 packaging==25.0
 pages==0.3
-pandas==2.3.3
+pandas
 parso==0.8.5
 patsy==1.0.2
 piglet-templates==1.3.2
@@ -79,7 +79,7 @@ pyzmq==27.1.0
 referencing==0.36.2
 requests==2.32.5
 rpds-py==0.27.1
-scikit-learn==1.6.1
+scikit-learn
 scipy==1.13.1
 seaborn==0.13.2
 six==1.17.0
@@ -102,10 +102,11 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
-uvicorn==0.38.0
+uvicorn
 watchdog==6.0.0
 watchfiles==1.1.1
 wcwidth==0.2.14
 websockets==15.0.1
 zipp==3.23.0
+
 
