@@ -12,9 +12,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # --- CONFIGURACIÓN DE RUTAS ---
-# En Render, la raíz es el proyecto. Los CSV están en data/
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(BASE_DIR, "data")
+# 1. Buscamos la ruta de este archivo actual
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# 2. Si este archivo está dentro de 'api', subimos un nivel para llegar a 'backend'
+if os.path.basename(current_dir) == 'api':
+    BASE_DIR = os.path.dirname(current_dir)
+else:
+    BASE_DIR = current_dir
 
 # Inicializar forecaster y analyzer globales
 forecaster = None
@@ -205,4 +210,5 @@ async def health_check():
         }
     except Exception as e:
         return {"status": "degraded", "error": str(e)}
+
 
