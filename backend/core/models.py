@@ -23,7 +23,7 @@ class AnalysisResponse(BaseModel):
     success: bool
     message: str
     data: Optional[Dict[str, Any]] = None
-    nsights: Optional[List[str]] = None  # Nuevo campo para insights
+    insights: Optional[List[str]] = None  # Nuevo campo para insights
 
 ############### Forecasting models #################
 class TrainModelsRequest(BaseModel):
@@ -51,4 +51,5 @@ class ForecastResponse(BaseModel):
     message: str
     data: Optional[Dict[str, Any]] = None
     dimension_ancla: Optional[str] = None
+
     metricas_calidad: Optional[Dict[str, Any]] = None
