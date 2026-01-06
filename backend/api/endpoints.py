@@ -15,11 +15,14 @@ router = APIRouter()
 # 1. Buscamos la ruta de este archivo actual
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# 2. Si este archivo está dentro de 'api', subimos un nivel para llegar a 'backend'
-if os.path.basename(current_dir) == 'api':
-    BASE_DIR = os.path.dirname(current_dir)
-else:
-    BASE_DIR = current_dir
+# 2. Subimos UN nivel para llegar a la carpeta 'backend'
+BACKEND_DIR = os.path.dirname(CURRENT_DIR)
+
+# 3. Ahora bajamos a la carpeta 'data'
+DATA_PATH = os.path.join(BACKEND_DIR, "data")
+
+# Verificación en logs
+logger.info(f"📂 Buscando archivos en: {DATA_PATH}")
 
 # Inicializar forecaster y analyzer globales
 forecaster = None
@@ -210,5 +213,6 @@ async def health_check():
         }
     except Exception as e:
         return {"status": "degraded", "error": str(e)}
+
 
 
