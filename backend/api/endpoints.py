@@ -13,7 +13,7 @@ router = APIRouter()
 
 # --- CONFIGURACIÓN DE RUTAS ---
 # En Render, la raíz es el proyecto. Los CSV están en data/
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "data")
 
 # Inicializar forecaster y analyzer globales
@@ -205,3 +205,4 @@ async def health_check():
         }
     except Exception as e:
         return {"status": "degraded", "error": str(e)}
+
