@@ -1,7 +1,8 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# SOLO importar el router, no lifespan
+# SOLO importar el router
 from api.endpoints import router as api_router
 
 app = FastAPI(
@@ -26,5 +27,6 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    # CAMBIA esta línea - pasar la app como string para reload
-    uvicorn.run("main:app", host="0.0.0.0", port=8002, reload=True)
+    # Leemos el puerto de Render o usamos 8002 por defecto para local
+    port = int(os.environ.get("PORT", 8002))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
