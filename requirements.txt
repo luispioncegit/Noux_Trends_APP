@@ -74,7 +74,6 @@ pyparsing==3.2.5
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 pytz==2025.2
-pywin32==311
 PyYAML==6.0.3
 pyzmq==27.1.0
 referencing==0.36.2
@@ -109,3 +108,4 @@ watchfiles==1.1.1
 wcwidth==0.2.14
 websockets==15.0.1
 zipp==3.23.0
+
