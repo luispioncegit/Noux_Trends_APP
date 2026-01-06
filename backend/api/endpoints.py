@@ -13,7 +13,7 @@ router = APIRouter()
 
 # --- CONFIGURACIÓN DE RUTAS ---
 # 1. Buscamos la ruta de este archivo actual
-current_dir = os.path.dirname(os.path.abspath(__file__))
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 2. Subimos UN nivel para llegar a la carpeta 'backend'
 BACKEND_DIR = os.path.dirname(CURRENT_DIR)
@@ -213,6 +213,7 @@ async def health_check():
         }
     except Exception as e:
         return {"status": "degraded", "error": str(e)}
+
 
 
 
