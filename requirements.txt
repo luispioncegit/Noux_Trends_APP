@@ -18,3 +18,8 @@ pillow==10.1.0
 
 # --- UTILIDADES ---
 python-dotenv==1.0.0
+
+# --- AGREGAR ESTAS PARA EL ANÁLISIS ESTADÍSTICO ---
+statsmodels==0.14.0
+scipy==1.11.3
+
