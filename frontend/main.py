@@ -1,5 +1,11 @@
 import streamlit as st
 import requests
+import os
+
+
+# Configuración de URL dinámica
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8002/api/v1")
+BASE_URL = BACKEND_URL.replace("/api/v1", "") # La raíz para el health check
 
 # Configuración de página
 st.set_page_config(
@@ -39,7 +45,7 @@ def render_main_sidebar():
         
         # Info del sistema
         try:
-            response = requests.get("http://localhost:8002/api/v1/health", timeout=5)
+            response = requests.get(BASE_URL, timeout=5) # <--- USAR BASE_URL
             if response.status_code == 200:
                 st.success("✅ Sistema Conectado")
             else:
@@ -102,7 +108,7 @@ def main():
         
         # Información del sistema
         try:
-            response = requests.get("http://localhost:8002/api/v1/health")
+            response = requests.get(BASE_URL)
             if response.status_code == 200:
                 health_data = response.json()
                 st.success("✅ Backend conectado")
@@ -119,4 +125,5 @@ def main():
     st.success("¡Usa el menú lateral para navegar a las diferentes secciones!")
 
 if __name__ == "__main__":
+
     main()
