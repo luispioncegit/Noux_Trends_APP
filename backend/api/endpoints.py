@@ -10,19 +10,24 @@ from core.forecaster import Forecaster
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+from pathlib import Path
 
-# --- CONFIGURACIÓN DE RUTAS ---
-# 1. Buscamos la ruta de este archivo actual
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+# --- CONFIGURACIÓN DE RUTAS SEGURA ---
+# Path(__file__) es el archivo actual (endpoints.py)
+# .resolve() obtiene la ruta completa
+# .parent es la carpeta 'api'
+# .parent.parent es la carpeta 'backend'
+BASE_BACKEND_DIR = Path(__file__).resolve().parent.parent
 
-# 2. Subimos UN nivel para llegar a la carpeta 'backend'
-BACKEND_DIR = os.path.dirname(CURRENT_DIR)
+# Definimos DATA_PATH apuntando a 'backend/data'
+DATA_PATH = BASE_BACKEND_DIR / "data"
 
-# 3. Ahora bajamos a la carpeta 'data'
-DATA_PATH = os.path.join(BACKEND_DIR, "data")
+# Convertimos a string para que os.path y pandas no tengan problemas
+DATA_PATH_STR = str(DATA_PATH)
 
-# Verificación en logs
-logger.info(f"📂 Buscando archivos en: {DATA_PATH}")
+logger.info(f"📍 Ruta del Backend: {BASE_BACKEND_DIR}")
+logger.info(f"📂 Carpeta de datos: {DATA_PATH_STR}")
+
 
 # Inicializar forecaster y analyzer globales
 forecaster = None
@@ -31,7 +36,7 @@ analyzer = None
 def load_ventas_data():
     """Carga datos de ventas desde el archivo CSV consolidado"""
     try:
-        csv_file = os.path.join(DATA_PATH, "ventas_full.csv")
+        csv_file = os.path.join(DATA_PATH_STR, "ventas_full.csv")
         logger.info(f"📂 Intentando cargar CSV desde: {csv_file}")
         
         # Leemos el CSV (que ya trae todos los JOINs hechos desde SQL)
@@ -50,7 +55,7 @@ def load_ventas_data():
 def get_database_stats():
     """Obtiene estadísticas desde el archivo CSV de stats"""
     try:
-        csv_stats = os.path.join(DATA_PATH, "stats_db.csv")
+        csv_stats = os.path.join(DATA_PATH_STR, "stats_db.csv")
         df_stats = pd.read_csv(csv_stats)
         
         # Asumiendo que el CSV tiene las columnas: 
@@ -213,6 +218,7 @@ async def health_check():
         }
     except Exception as e:
         return {"status": "degraded", "error": str(e)}
+
 
 
 
