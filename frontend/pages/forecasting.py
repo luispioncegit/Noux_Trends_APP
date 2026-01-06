@@ -5,6 +5,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 from datetime import datetime, timedelta
+import os
+import matplotlib
+matplotlib.use('Agg') # Fuerza a Matplotlib a no buscar una pantalla (indispensable para Render)
+import matplotlib.pyplot as plt
 
 # Al inicio del archivo, después de los imports
 if 'pronostico_results' not in st.session_state:
@@ -19,8 +23,12 @@ st.set_page_config(
     layout="wide",
 )
 
-# URL del backend
-BACKEND_URL = "http://localhost:8002/api/v1"
+# Cambiar esto:
+# BACKEND_URL = "http://localhost:8002/api/v1"
+
+# Por esto:
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8002/api/v1")
+BASE_URL = BACKEND_URL.replace("/api/v1", "")
 
 def render_forecasting_sidebar():
     """Sidebar para configuración de pronósticos"""
@@ -30,7 +38,7 @@ def render_forecasting_sidebar():
         
         # Info del sistema
         try:
-            response = requests.get(f"{BACKEND_URL}/health", timeout=5)
+            response = requests.get(BASE_URL, timeout=5)
             if response.status_code == 200:
                 st.success("✅ Sistema Conectado")
             else:
@@ -923,4 +931,5 @@ def mostrar_modelos_existentes(modelos_existentes):
                 st.write(f"• {modelo}")
 
 if __name__ == "__main__":
+
     main()
