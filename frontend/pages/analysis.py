@@ -3,6 +3,7 @@ import requests
 import base64
 from PIL import Image
 import io
+import os
 
 # Configuración de página
 st.set_page_config(
@@ -11,8 +12,13 @@ st.set_page_config(
     layout="wide",
 )
 
-# URL del backend
-BACKEND_URL = "http://localhost:8002/api/v1"
+# Cambiar esto:
+# BACKEND_URL = "http://localhost:8002/api/v1"
+
+# Por esto:
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8002/api/v1")
+# Creamos una variable para la raíz (útil para el health check)
+BASE_URL = BACKEND_URL.replace("/api/v1", "")
 
 def render_analysis_sidebar():
     """Sidebar personalizado para Analysis CON filtros"""
@@ -23,7 +29,7 @@ def render_analysis_sidebar():
         # Info del sistema
         backend_online = False
         try:
-            response = requests.get("http://localhost:8002/api/v1/health", timeout=5)
+            response = requests.get(BASE_URL, timeout=3) # <--- USAR BASE_URL
             if response.status_code == 200:
                 st.success("✅ Sistema Conectado")
                 backend_online = True
@@ -400,4 +406,5 @@ def mostrar_info_dataset(info):
         st.json(info)
 
 if __name__ == "__main__":
+
     main()
