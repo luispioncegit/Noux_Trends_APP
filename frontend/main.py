@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import os
+import time
 
 
 # --- CONFIGURACIÓN DE URL ---
@@ -39,6 +40,21 @@ def load_css():
         </style>
         """, unsafe_allow_html=True)
 
+def get_health_with_retry(url, retries=3, delay=5):
+    """
+    Intenta conectar al backend varias veces antes de rendirse.
+    Útil para el 'despertar' de Render.
+    """
+    for i in range(retries):
+        try:
+            response = requests.get(url, timeout=300)
+            if response.status_code == 200:
+                return response # Conexión exitosa
+        except Exception:
+            if i < retries - 1:
+                time.sleep(delay) # Espera antes de intentar de nuevo
+    return None # Falló tras los reintentos
+
 def render_main_sidebar():
     """Sidebar personalizado para Main SIN filtros"""
     with st.sidebar:
@@ -47,7 +63,7 @@ def render_main_sidebar():
         
         # Info del sistema
         try:
-            response = requests.get(HEALTH_URL, timeout=5) # <--- Apuntamos a HEALTH_URL
+            response = get_health_with_retry(HEALTH_URL)
             if response.status_code == 200:
                 st.success("✅ Sistema Conectado")
             else:
@@ -110,7 +126,7 @@ def main():
         
         # Información del sistema
         try:
-            response = requests.get(HEALTH_URL, timeout=5)
+            response = get_health_with_retry(HEALTH_URL)
             if response.status_code == 200:
                 health_data = response.json()
                 st.success("✅ Backend conectado")
@@ -126,7 +142,10 @@ def main():
 
     st.success("¡Usa el menú lateral para navegar a las diferentes secciones!")
 
+
+
 if __name__ == "__main__":
 
     main()
+
 
