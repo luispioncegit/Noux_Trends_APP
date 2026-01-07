@@ -53,31 +53,40 @@ def load_ventas_data():
         raise
 
 def get_database_stats():
-    """Obtiene estadísticas desde el archivo CSV de stats"""
+    """Obtiene estadísticas desde el archivo CSV con limpieza extrema de columnas"""
     try:
         csv_stats = os.path.join(DATA_PATH_STR, "stats_db.csv")
+        
+        if not os.path.exists(csv_stats):
+            logger.error(f"⚠️ Archivo stats no encontrado en: {csv_stats}")
+            return {"total_registros": 0, "fecha_minima": "N/A", "fecha_maxima": "N/A", "locales_unicos": 0, "articulos_unicos": 0}
+
         df_stats = pd.read_csv(csv_stats)
         
-        # Asumiendo que el CSV tiene las columnas: 
-        # total_registros, fecha_minima, fecha_maxima, locales_unicos, articulos_unicos
+        # --- LIMPIEZA DE COLUMNAS (Clave para arreglar el N/A) ---
+        # 1. Quita comillas dobles que vimos en tu captura
+        # 2. Pone todo en minúsculas
+        # 3. Quita espacios vacíos
+        df_stats.columns = [c.replace('"', '').replace("'", "").lower().strip() for c in df_stats.columns]
+
+        logger.info(f"📊 Columnas limpias detectadas: {df_stats.columns.tolist()}")
+        
+        if df_stats.empty:
+            return {"total_registros": 0, "fecha_minima": "N/A", "fecha_maxima": "N/A", "locales_unicos": 0, "articulos_unicos": 0}
+
         result = df_stats.iloc[0]
         
         return {
-            "total_registros": int(result['total_registros']),
-            "fecha_minima": str(result['fecha_minima']),
-            "fecha_maxima": str(result['fecha_maxima']),
-            "locales_unicos": int(result['locales_unicos']),
-            "articulos_unicos": int(result['articulos_unicos'])
+            "total_registros": int(result.get('total_registros', 0)),
+            "fecha_minima": str(result.get('fecha_minima', 'N/A')),
+            "fecha_maxima": str(result.get('fecha_maxima', 'N/A')),
+            "locales_unicos": int(result.get('locales_unicos', 0)),
+            "articulos_unicos": int(result.get('articulos_unicos', 0))
         }
+
     except Exception as e:
-        logger.error(f"❌ Error en stats CSV: {str(e)}")
-        return {
-            "total_registros": 0,
-            "fecha_minima": "N/A",
-            "fecha_maxima": "N/A",
-            "locales_unicos": 0,
-            "articulos_unicos": 0
-        }
+        logger.error(f"❌ Error procesando stats_db.csv: {str(e)}")
+        return {"total_registros": 0, "fecha_minima": "N/A", "fecha_maxima": "N/A", "locales_unicos": 0, "articulos_unicos": 0}
 
 @router.on_event("startup")
 async def startup_event():
@@ -218,6 +227,7 @@ async def health_check():
         }
     except Exception as e:
         return {"status": "degraded", "error": str(e)}
+
 
 
 
