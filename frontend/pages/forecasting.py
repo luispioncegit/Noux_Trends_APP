@@ -83,7 +83,7 @@ def render_training_sidebar():
     variables_seleccionadas = st.multiselect(
         "Variables categóricas para entrenar:",
         options=variables_opciones,
-        default=variables_opciones[:2],
+        default=variables_opciones[:1],
         help="Cada variable categórica será usada en el modelo global"
     )
     
@@ -166,7 +166,7 @@ def render_prediction_sidebar():
         try:
             variables_filtros = obtener_variables_categoricas()
             if variables_filtros:
-                variables_entrenadas = variables_filtros[:2]  # Primeras 2 variables
+                variables_entrenadas = variables_filtros[:1]  # Primeras 2 variables
         except:
             pass
     
@@ -197,7 +197,7 @@ def render_prediction_sidebar():
         "Días a predecir:",
         min_value=7,
         max_value=90,
-        value=30,
+        value=7,
         help="Horizonte de predicción en días"
     )
     
@@ -933,4 +933,5 @@ def mostrar_modelos_existentes(modelos_existentes):
 if __name__ == "__main__":
 
     main()
+
 
