@@ -3,9 +3,11 @@ import requests
 import os
 
 
-# Configuración de URL dinámica
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8002/api/v1")
-BASE_URL = BACKEND_URL.replace("/api/v1", "") # La raíz para el health check
+# --- CONFIGURACIÓN DE URL ---
+# Usamos BACKEND_URL que ya tiene el /api/v1
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8002/api/v1").rstrip('/')
+# Creamos una ruta específica para el health check
+HEALTH_URL = f"{BACKEND_URL}/health"
 
 # Configuración de página
 st.set_page_config(
@@ -45,7 +47,7 @@ def render_main_sidebar():
         
         # Info del sistema
         try:
-            response = requests.get(BASE_URL, timeout=5) # <--- USAR BASE_URL
+            response = requests.get(HEALTH_URL, timeout=5) # <--- Apuntamos a HEALTH_URL
             if response.status_code == 200:
                 st.success("✅ Sistema Conectado")
             else:
@@ -108,7 +110,7 @@ def main():
         
         # Información del sistema
         try:
-            response = requests.get(BASE_URL)
+            response = requests.get(HEALTH_URL, timeout=5)
             if response.status_code == 200:
                 health_data = response.json()
                 st.success("✅ Backend conectado")
@@ -127,3 +129,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
