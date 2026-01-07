@@ -600,7 +600,7 @@ def generar_pronostico(config):
                 "intervalo_confianza": config['intervalo_confianza']
             }
             
-            response = requests.post(f"{BACKEND_URL}/forecast/multi-level", json=payload)
+            response = requests.post(f"{BACKEND_URL}/forecast/multi-level", json=payload, timeout=300)
             
             if response.status_code == 200:
                 resultados = response.json()
@@ -609,10 +609,10 @@ def generar_pronostico(config):
                 st.session_state.pronostico_config = config
                 mostrar_resultados_pronostico(resultados, config)
             else:
-                st.error(f"❌ Error en el pronóstico: {response.status_code}")
+                st.error("El servidor tardó demasiado en responder. Intenta con un horizonte más corto.")
                 
-        except Exception as e:
-            st.error(f"❌ Error conectando con el backend: {str(e)}")
+        except requests.exceptions.Timeout:
+            st.error("⏳ Tiempo de espera agotado. El análisis es muy complejo para los recursos actuales.")
 
 def mostrar_resultados_pronostico(resultados=None, config=None):
     """Muestra los resultados del pronóstico desde session_state"""
@@ -933,3 +933,4 @@ def mostrar_modelos_existentes(modelos_existentes):
 if __name__ == "__main__":
 
     main()
+
