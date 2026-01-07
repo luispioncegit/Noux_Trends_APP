@@ -393,9 +393,9 @@ def mostrar_imagen_base64(base64_string):
         
         # Mostrar imagen
         try:
-            st.image(grafico_base64, use_container_width=True)
+            st.image(image, use_container_width=True)
         except TypeError:
-            st.image(grafico_base64, use_column_width=True)
+            st.image(image, use_column_width=True)
         
     except Exception as e:
         st.error(f"❌ Error mostrando gráfico: {str(e)}")
@@ -411,4 +411,5 @@ def mostrar_info_dataset(info):
 if __name__ == "__main__":
 
     main()
+
 
